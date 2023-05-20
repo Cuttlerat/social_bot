@@ -13,6 +13,7 @@ from sqlalchemy import (
     func,
 )
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.engine import URL
 from sqlalchemy.orm import sessionmaker
 
 API_TOKEN = os.environ.get("TG_TOKEN")
@@ -26,17 +27,16 @@ dp = Dispatcher(bot)
 GOOD_STICKER_ID = "AgADAgADf3BGHA"
 BAD_STICKER_ID = "AgADAwADf3BGHA"
 
-db_conn = {
-    "host": os.environ.get("DATABASE_HOST"),
-    "port": os.environ.get("DATABASE_PORT"),
-    "database": os.environ.get("DATABASE_NAME"),
-    "user": os.environ.get("DATABASE_USER"),
-    "password": os.environ.get("DATABASE_PASSWORD"),
-}
+db_conn_url = URL(
+    drivername="postgresql+psycopg2",
+    username=os.environ.get("DATABASE_USER"),
+    password=os.environ.get("DATABASE_PASSWORD"),
+    host=os.environ.get("DATABASE_HOST"),
+    port=os.environ.get("DATABASE_PORT"),
+    database=os.environ.get("DATABASE_NAME"),
+    query={},
+)
 
-db_conn_url = f"postgresql+psycopg2://{db_conn['user']}:{db_conn['password']}@{db_conn['host']}:{db_conn['port']}/{db_conn['database']}"
-
-# Define the SQLAlchemy model for the social_bot table
 Base = declarative_base()
 
 
@@ -86,7 +86,7 @@ async def process_sticker(message: types.Message):
     if reply_user.is_bot:
         await message.reply("Can't edit bot social credit")
         return
-    elif user.id == reply_user.id:
+    if user.id == reply_user.id:
         await message.reply("Can't edit your own social credit")
         return
 
