@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-social-bot
+  labels:
+    app: {{ .Release.Name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ .Release.Name }}-social-bot
+          image: {{ .Values.image.name }}:{{ .Values.image.tag }}
+          env:
+            - name: DATABASE_HOST
+              value: "{{ .Release.Name }}-postgresql"
+            - name: DATABASE_PORT
+              value: "{{ .Values.postgresql.primary.service.ports.postgresql }}"
+            - name: DATABASE_NAME
+              value: "{{ .Values.postgresql.auth.database }}"
+            - name: DATABASE_USER
+              value: "{{ .Values.postgresql.auth.username }}"
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-postgresql
+                  key: password
+            - name: TG_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-tg-token
+                  key: token

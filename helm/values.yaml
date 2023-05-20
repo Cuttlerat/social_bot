@@ -1,0 +1,26 @@
+image:
+  name: social-bot
+  tag: 0.1.17
+
+tg_token: ""
+
+postgresql:
+  image:
+    repository: arm32v7/postgres
+    tag: 11.6
+  auth:
+    enablePostgresUser: false
+    username: "social-bot"
+    database: "social-bot"
+  primary:
+    initdb:
+      scripts:
+        create-table.sql: |-
+          CREATE TABLE IF NOT EXISTS social_bot (
+            id SERIAL PRIMARY KEY,
+            user_id BIGINT,
+            username VARCHAR(255),
+            social_rating INT,
+            chat_id BIGINT,
+            last_update TIMESTAMP
+          );
