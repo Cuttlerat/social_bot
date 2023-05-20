@@ -66,10 +66,8 @@ async def social_rank(message: types.Message):
         .order_by(SocialBot.social_rating.desc())
         .all()
     )
-    response = ""
-    for record in records:
-        response += f"{record.username}: {record.social_rating}\n"
-    await message.reply(response)
+    entries = (f"{record.username}: {record.social_rating}" for record in records)
+    await message.reply("\n".join(entries))
 
 
 @dp.message_handler(content_types=types.ContentTypes.STICKER)
