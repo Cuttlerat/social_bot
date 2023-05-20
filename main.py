@@ -83,11 +83,15 @@ async def process_sticker(message: types.Message):
     if not message.reply_to_message:
         return
 
+    sticker_id = message.sticker.file_unique_id
+
+    if sticker_id not in STICKERS:
+        return
+
     user = message.from_user
     username = user.username or user.full_name
     reply_user = message.reply_to_message.from_user
     reply_username = reply_user.username or reply_user.full_name
-    sticker_id = message.sticker.file_unique_id
 
     if reply_user.is_bot:
         await message.reply("Can't edit bot social credit")
@@ -115,10 +119,8 @@ async def process_sticker(message: types.Message):
         )
         return
 
-    msg_verb = ""
-    if sticker_id in STICKERS:
-        record.social_rating += STICKERS[sticker_id]["rating"]
-        msg_verb = STICKERS[sticker_id]["msg_verb"]
+    record.social_rating += STICKERS[sticker_id]["rating"]
+    msg_verb = STICKERS[sticker_id]["msg_verb"]
 
     record.username = reply_username
     record.last_update = datetime.now()

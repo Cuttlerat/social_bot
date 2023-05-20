@@ -1,6 +1,6 @@
 image:
   name: social-bot
-  tag: 0.1.21
+  tag: 0.1.22
 
 tg_token: ""
 
