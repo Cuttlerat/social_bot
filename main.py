@@ -24,9 +24,6 @@ logger = logging.getLogger(__name__)
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
 
-GOOD_STICKER_ID = "AgADAgADf3BGHA"
-BAD_STICKER_ID = "AgADAwADf3BGHA"
-
 db_conn_url = URL(
     drivername="postgresql+psycopg2",
     username=os.environ.get("DATABASE_USER"),
@@ -36,6 +33,17 @@ db_conn_url = URL(
     database=os.environ.get("DATABASE_NAME"),
     query={},
 )
+
+STICKERS = {
+    "AgADAgADf3BGHA": {
+        "rating": 20,
+        "msg_verb": "increased",
+    },
+    "AgADAwADf3BGHA": {
+        "rating": -20,
+        "msg_verb": "decreased",
+    },
+}
 
 Base = declarative_base()
 
@@ -108,13 +116,9 @@ async def process_sticker(message: types.Message):
         return
 
     msg_verb = ""
-
-    if sticker_id == GOOD_STICKER_ID:
-        record.social_rating += 20
-        msg_verb = "increased"
-    if sticker_id == BAD_STICKER_ID:
-        record.social_rating -= 20
-        msg_verb = "decreased"
+    if sticker_id in STICKERS:
+        record.social_rating += STICKERS[sticker_id]["rating"]
+        msg_verb = STICKERS[sticker_id]["msg_verb"]
 
     record.username = reply_username
     record.last_update = datetime.now()
