@@ -98,7 +98,7 @@ async def process_sticker(message: types.Message):
     if not record:
         record = SocialBot(
             user_id=reply_user.id,
-            username=username,
+            username=reply_username,
             chat_id=message.chat.id,
             social_rating=0,
         )
