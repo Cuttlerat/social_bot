@@ -35,15 +35,9 @@ db_conn_url = URL(
     query={},
 )
 
-STICKERS = {
-    "AgADAgADf3BGHA": {
-        "rating": 20,
-        "msg_verb": "increased",
-    },
-    "AgADAwADf3BGHA": {
-        "rating": -20,
-        "msg_verb": "decreased",
-    },
+STICKERS_RATING = {
+    "AgADAgADf3BGHA": 20,
+    "AgADAwADf3BGHA": -20,
 }
 
 Base = declarative_base()
@@ -102,7 +96,7 @@ async def process_sticker(message: types.Message):
 
     sticker_id = message.sticker.file_unique_id
 
-    if sticker_id not in STICKERS:
+    if sticker_id not in STICKERS_RATING:
         return
 
     user = message.from_user
@@ -134,8 +128,15 @@ async def process_sticker(message: types.Message):
         )
         return
 
-    reply_user_record.social_rating += STICKERS[sticker_id]["rating"]
-    msg_verb = STICKERS[sticker_id]["msg_verb"]
+    rating_change = STICKERS_RATING[sticker_id]
+    reply_user_record.social_rating += rating_change
+
+    if rating_change > 0:
+        msg_verb = "increased"
+    elif rating_change < 0:
+        msg_verb = "decreased"
+    else:
+        msg_verb = "did nothing to"
 
     reply_user_record.username = reply_username
     user_record.last_update = datetime.now()
