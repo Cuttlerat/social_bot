@@ -1,6 +1,7 @@
 import logging
 import os
 from datetime import datetime, timedelta
+from typing import Any
 
 from aiogram import Bot, Dispatcher, executor, types
 from sqlalchemy import (
@@ -66,6 +67,22 @@ Session = sessionmaker(bind=engine)
 session = Session()
 
 
+def ensure_user_record(db_session, user_id, chat_id, username):
+    record = (
+        db_session.query(SocialBot).filter_by(user_id=user_id, chat_id=chat_id).first()
+    )
+    if not record:
+        record = SocialBot(
+            user_id=user_id,
+            username=username,
+            chat_id=chat_id,
+            social_rating=0,
+        )
+        db_session.add(record)
+    db_session.commit()
+    return record
+
+
 @dp.message_handler(commands=["social_rank"])
 async def social_rank(message: types.Message):
     records = (
@@ -100,32 +117,30 @@ async def process_sticker(message: types.Message):
         await message.reply("Can't edit your own social credit")
         return
 
-    record = (
-        session.query(SocialBot)
-        .filter_by(user_id=reply_user.id, chat_id=message.chat.id)
-        .first()
+    reply_user_record = ensure_user_record(
+        db_session=session,
+        user_id=reply_user.id,
+        chat_id=message.chat.id,
+        username=reply_username,
     )
-    if not record:
-        record = SocialBot(
-            user_id=reply_user.id,
-            username=reply_username,
-            chat_id=message.chat.id,
-            social_rating=0,
-        )
-        session.add(record)
-    elif record.last_update + timedelta(minutes=1) > datetime.now():
+
+    user_record = ensure_user_record(
+        db_session=session, user_id=user.id, chat_id=message.chat.id, username=username
+    )
+
+    if user_record.last_update + timedelta(minutes=1) > datetime.now():
         await message.reply(
             "You have to wait one minute before changing social rating again!"
         )
         return
 
-    record.social_rating += STICKERS[sticker_id]["rating"]
+    reply_user_record.social_rating += STICKERS[sticker_id]["rating"]
     msg_verb = STICKERS[sticker_id]["msg_verb"]
 
-    record.username = reply_username
-    record.last_update = datetime.now()
+    reply_user_record.username = reply_username
+    user_record.last_update = datetime.now()
 
-    msg = f"{username} {msg_verb} rank of {reply_username}!\nNow their social credit is {record.social_rating} points"
+    msg = f"{username} {msg_verb} rank of {reply_username}!\nNow their social credit is {reply_user_record.social_rating} points"
     session.commit()
     await message.reply(msg)
 
