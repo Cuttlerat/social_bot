@@ -51,7 +51,7 @@ class SocialBot(Base):
     username = Column(String(255))
     social_rating = Column(Integer)
     chat_id = Column(BigInteger)
-    last_update = Column(DateTime, default=func.now())
+    last_update = Column(DateTime, default=datetime.min)
 
 
 # Create the database engine and session
